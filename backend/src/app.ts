@@ -1,45 +1,40 @@
 
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import morgan from 'morgan';
-import config from './config';
-import { stream } from './utils/logger';
-import { errorHandler, notFoundHandler } from './middleware/error.middleware';
-
-// Import routes
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import ticketRoutes from './routes/ticket.routes';
-import commentRoutes from './routes/comment.routes';
 import healthRoutes from './routes/health.routes';
+import metricsRoutes from './routes/metrics.routes';
+import { errorHandler } from './middleware/error.middleware';
+import { stream } from './utils/logger';
+import { metricsController } from './controllers/metrics.controller';
 
-// Create Express app
 const app = express();
 
 // Middleware
-app.use(cors(config.server.cors));
-app.use(helmet());
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev', { stream }));
+app.use(morgan('combined', { stream }));
 
-// API Routes
+// Metrics middleware for all routes
+app.use(metricsController.recordMetrics);
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/tickets', ticketRoutes);
-app.use('/api/tickets', commentRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/metrics', metricsRoutes);
 
-// Health check endpoint
-app.get('/api/health/simple', (_req, res) => {
-  res.status(200).json({ status: 'OK' });
+// Not found handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
 });
 
-// Handle 404 errors
-app.use(notFoundHandler);
-
-// Error handling middleware
+// Error handling
 app.use(errorHandler);
 
 export default app;
