@@ -1,261 +1,167 @@
 
-# DevCompass - AI-Powered Issue Tracker and DevOps Dashboard
+# DevCompass: Development & Deployment Guide
 
-## Local Development Setup
+## Project Overview
+
+DevCompass is a complete ticket tracking system with a React frontend and Node.js/Express backend. The project follows a monorepo structure for easier development and deployment.
+
+## Repository Structure
+
+```
+devcompass/
+├── backend/              # Node.js/Express API
+├── frontend/             # React/Vite frontend
+├── docker-compose.yml    # Docker Compose configuration
+└── .gitignore            # Git ignore file
+```
+
+## Getting Started
 
 ### Prerequisites
-- Node.js 16+ and npm
-- Docker and Docker Compose (for containerized deployment)
-- Supabase account (for backend services)
 
-### Environment Setup
-1. Copy `.env.example` to `.env`:
+- Node.js 18+ (for local development)
+- Docker and Docker Compose (for containerized development/deployment)
+- Supabase account (for authentication and data storage)
+
+### Local Development
+
+#### Frontend
+
 ```bash
-cp .env.example .env
-```
+# Navigate to frontend directory
+cd frontend
 
-2. Update the `.env` file with your Supabase credentials:
-```
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-### Supabase Setup
-1. Create a new Supabase project
-2. Set up the following tables in the Supabase database:
-
-**users**
-```sql
-create table users (
-  id uuid references auth.users on delete cascade,
-  name text not null,
-  email text not null unique,
-  role text not null check (role in ('Admin', 'Developer', 'Tester')),
-  avatar text,
-  created_at timestamp with time zone default now()
-);
-
--- Enable Row Level Security
-alter table users enable row level security;
-
--- Create policies
-create policy "Users can view all users" on users
-  for select using (true);
-
-create policy "Users can update their own user data" on users
-  for update using (auth.uid() = id);
-```
-
-**tickets**
-```sql
-create table tickets (
-  id uuid default uuid_generate_v4() primary key,
-  title text not null,
-  description text not null,
-  status text not null check (status in ('Open', 'In Progress', 'Review', 'Done')),
-  priority text not null check (priority in ('Low', 'Medium', 'High', 'Critical')),
-  assignee_id uuid references users(id),
-  reporter_id uuid references users(id) not null,
-  ai_suggestion text,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-
--- Enable Row Level Security
-alter table tickets enable row level security;
-
--- Create policies
-create policy "Users can view all tickets" on tickets
-  for select using (true);
-
-create policy "Users can create tickets" on tickets
-  for insert with check (auth.uid() = reporter_id);
-
-create policy "Users can update tickets they created or are assigned to" on tickets
-  for update using (
-    auth.uid() = reporter_id or 
-    auth.uid() = assignee_id
-  );
-```
-
-**comments**
-```sql
-create table comments (
-  id uuid default uuid_generate_v4() primary key,
-  ticket_id uuid references tickets(id) on delete cascade not null,
-  content text not null,
-  author_id uuid references users(id) not null,
-  created_at timestamp with time zone default now()
-);
-
--- Enable Row Level Security
-alter table comments enable row level security;
-
--- Create policies
-create policy "Users can view all comments" on comments
-  for select using (true);
-
-create policy "Users can create comments" on comments
-  for insert with check (auth.uid() = author_id);
-```
-
-3. Enable Email Authentication in Supabase Auth settings
-
-### Running Locally
-
-#### Development Mode
-```bash
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 
-#### Production Build
+#### Backend
+
 ```bash
+# Navigate to backend directory
+cd backend
+
+# Install dependencies
 npm install
-npm run build
-npm run preview
+
+# Start development server
+npm run dev
 ```
 
-### Docker Deployment
+### Using Docker Compose
 
-#### Build and Run with Docker Compose
+The easiest way to run the entire stack is with Docker Compose:
+
 ```bash
-# Build and start the container
+# Build and start all services
+docker-compose up --build
+
+# Run in detached mode
 docker-compose up -d
 
 # View logs
 docker-compose logs -f
 
-# Stop containers
+# Stop all services
 docker-compose down
-```
-
-## API Documentation
-
-### Authentication Endpoints
-
-#### POST /api/auth/login
-Login with email and password
-
-**Request:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
-
-**Response:**
-```json
-{
-  "user": {
-    "id": "uuid",
-    "name": "User Name",
-    "email": "user@example.com",
-    "role": "Developer",
-    "avatar": "https://avatar-url"
-  },
-  "session": {
-    "access_token": "jwt-token",
-    "refresh_token": "refresh-token"
-  }
-}
-```
-
-#### POST /api/auth/logout
-Log out the current user
-
-#### POST /api/auth/register
-Register a new user
-
-**Request:**
-```json
-{
-  "name": "New User",
-  "email": "newuser@example.com",
-  "password": "password123",
-  "role": "Developer"
-}
-```
-
-### Ticket Endpoints
-
-#### GET /api/tickets
-Get all tickets
-
-#### POST /api/tickets
-Create a new ticket
-
-**Request:**
-```json
-{
-  "title": "New Feature Request",
-  "description": "Add dark mode to the application",
-  "status": "Open",
-  "priority": "Medium",
-  "assignee_id": "uuid-or-null"
-}
-```
-
-#### GET /api/tickets/:id
-Get a specific ticket by ID
-
-#### PUT /api/tickets/:id
-Update a ticket
-
-**Request:**
-```json
-{
-  "title": "Updated Title",
-  "status": "In Progress",
-  "priority": "High"
-}
-```
-
-#### DELETE /api/tickets/:id
-Delete a ticket
-
-#### GET /api/tickets/:id/comments
-Get all comments for a ticket
-
-#### POST /api/tickets/:id/comments
-Add a comment to a ticket
-
-**Request:**
-```json
-{
-  "content": "This is looking good. Ready for review."
-}
-```
-
-### User Endpoints
-
-#### GET /api/users
-Get all users
-
-#### GET /api/users/:id
-Get a specific user by ID
-
-### Health Check
-
-#### GET /health
-Get application health status
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "version": "1.0.0",
-  "timestamp": "2025-04-26T12:34:56.789Z"
-}
 ```
 
 ## Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| VITE_SUPABASE_URL | Supabase project URL | https://xyz.supabase.co |
-| VITE_SUPABASE_ANON_KEY | Supabase anonymous/public API key | eyJhbGciOiJI... |
-| VITE_API_BASE_URL | Base URL for API calls | http://localhost:8080/api |
-| VITE_ENABLE_AI_FEATURES | Toggle AI features | true |
-| VITE_APP_VERSION | Application version | 1.0.0 |
+### Frontend (.env)
+
+```
+VITE_SUPABASE_URL=your-supabase-project-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_API_BASE_URL=http://localhost:8080/api
+VITE_ENABLE_AI_FEATURES=true
+VITE_APP_VERSION=1.0.0
+```
+
+### Backend (.env)
+
+```
+PORT=8080
+NODE_ENV=development
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_USER=devuser
+POSTGRES_PASSWORD=devpassword
+POSTGRES_DB=ticketdb
+DATABASE_URL=postgresql://devuser:devpassword@postgres:5432/ticketdb
+JWT_SECRET=your-secret-key
+JWT_EXPIRES_IN=7d
+```
+
+## API Documentation
+
+### Authentication
+
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/register` - Register new user
+- `GET /api/auth/profile` - Get current user profile (requires authentication)
+- `PUT /api/auth/password` - Update password (requires authentication)
+
+### Users
+
+- `GET /api/users` - Get all users (requires authentication)
+- `GET /api/users/:id` - Get user by ID (requires authentication)
+- `PUT /api/users/:id` - Update user (requires admin)
+- `DELETE /api/users/:id` - Delete user (requires admin)
+
+### Tickets
+
+- `GET /api/tickets` - Get all tickets (requires authentication)
+- `GET /api/tickets/:id` - Get ticket by ID (requires authentication)
+- `POST /api/tickets` - Create new ticket (requires authentication)
+- `PUT /api/tickets/:id` - Update ticket (requires authentication)
+- `DELETE /api/tickets/:id` - Delete ticket (requires authentication)
+
+### Comments
+
+- `GET /api/tickets/:ticketId/comments` - Get comments for ticket (requires authentication)
+- `POST /api/tickets/:ticketId/comments` - Add comment to ticket (requires authentication)
+- `PUT /api/comments/:commentId` - Update comment (requires authentication)
+- `DELETE /api/comments/:commentId` - Delete comment (requires authentication)
+
+### Health
+
+- `GET /api/health` - Detailed health check
+- `GET /api/health/simple` - Simple health check
+
+## Deployment
+
+### Prerequisites
+
+- Docker and Docker Compose installed on the server
+- Git for pulling updates
+
+### Basic Deployment Steps
+
+1. Clone the repository on your server:
+   ```bash
+   git clone https://your-repo-url/devcompass.git
+   cd devcompass
+   ```
+
+2. Create `.env` files for both frontend and backend based on the `.env.example` files.
+
+3. Build and start the containers:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. The application will be available at:
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8080/api
+
+### Production Considerations
+
+- Set up a reverse proxy (like Nginx) in front of your containers
+- Configure SSL certificates for HTTPS
+- Set up CI/CD pipelines for automated testing and deployment
+- Implement proper logging and monitoring
+- Consider using container orchestration tools like Kubernetes for larger deployments
