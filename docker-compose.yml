@@ -7,11 +7,11 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
+      - "5173:80"
     environment:
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
       - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+      - VITE_API_BASE_URL=http://backend:8080/api
       - VITE_ENABLE_AI_FEATURES=${VITE_ENABLE_AI_FEATURES}
       - VITE_APP_VERSION=${VITE_APP_VERSION}
     healthcheck:
@@ -19,13 +19,62 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
-      start_period: 10s
-    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=devuser
+      - POSTGRES_PASSWORD=devpassword
+      - POSTGRES_DB=ticketdb
+      - DATABASE_URL=postgresql://devuser:devpassword@postgres:5432/ticketdb
+      - JWT_SECRET=your-secret-key
+      - JWT_EXPIRES_IN=7d
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: ticketdb
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      # For development only - comment out in production
-      # - ./src:/app/src
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devuser -d ticketdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 
 networks:
-  default:
-    name: devops-network
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
