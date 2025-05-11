@@ -1,0 +1,7 @@
+node_modules
+.git
+terraform
+*.log
+dist
+.vscode
+.DS_Store 

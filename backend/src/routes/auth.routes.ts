@@ -1,20 +1,19 @@
-
-import { Router } from 'express';
-import * as AuthController from '../controllers/auth.controller';
+import express from 'express';
+import { login, register, getProfile, updatePassword } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
-const router = Router();
+const router = express.Router();
 
 // POST /api/auth/login - Login user
-router.post('/login', AuthController.login);
+router.post('/login', login);
 
 // POST /api/auth/register - Register new user
-router.post('/register', AuthController.register);
+router.post('/register', register);
 
-// GET /api/auth/profile - Get user profile (protected)
-router.get('/profile', authenticate, AuthController.getProfile);
+// GET /api/auth/profile - Get user profile
+router.get('/profile', authenticate, getProfile);
 
-// PUT /api/auth/password - Update user password (protected)
-router.put('/password', authenticate, AuthController.updatePassword);
+// PUT /api/auth/password - Update password
+router.put('/password', authenticate, updatePassword);
 
 export default router;

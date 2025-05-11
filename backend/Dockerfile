@@ -1,4 +1,3 @@
-
 # Build stage
 FROM node:18-alpine AS build
 
@@ -6,7 +5,7 @@ WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -23,7 +22,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copy built files from build stage
 COPY --from=build /app/dist ./dist

@@ -1,14 +1,13 @@
-
-# DevCompass: Development & Deployment Guide
+# DevOps Platform: Development & Deployment Guide
 
 ## Project Overview
 
-DevCompass is a complete ticket tracking system with a React frontend and Node.js/Express backend. The project follows a monorepo structure for easier development and deployment.
+DevOps Platform is a complete ticket tracking system with a React frontend and Node.js/Express backend. The project follows a monorepo structure for easier development and deployment.
 
 ## Repository Structure
 
 ```
-devcompass/
+devops-platform/
 ├── backend/              # Node.js/Express API
 ├── frontend/             # React/Vite frontend
 ├── docker-compose.yml    # Docker Compose configuration
@@ -76,7 +75,7 @@ docker-compose down
 ```
 VITE_SUPABASE_URL=your-supabase-project-url
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://backend:8080/api
 VITE_ENABLE_AI_FEATURES=true
 VITE_APP_VERSION=1.0.0
 ```
@@ -143,8 +142,8 @@ JWT_EXPIRES_IN=7d
 
 1. Clone the repository on your server:
    ```bash
-   git clone https://your-repo-url/devcompass.git
-   cd devcompass
+   git clone https://your-repo-url/devops-platform.git
+   cd devops-platform
    ```
 
 2. Create `.env` files for both frontend and backend based on the `.env.example` files.

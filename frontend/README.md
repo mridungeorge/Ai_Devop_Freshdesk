@@ -1,7 +1,6 @@
+# DevOps Platform Frontend
 
-# DevCompass Frontend
-
-A modern React frontend for the DevCompass ticket tracking system.
+A modern React frontend for the DevOps Platform.
 
 ## Features
 
@@ -54,8 +53,8 @@ The project includes Docker support for containerization:
 
 ```bash
 # Build and run with Docker
-docker build -t devcompass-frontend .
-docker run -p 5173:80 devcompass-frontend
+docker build -t devops-platform-frontend .
+docker run -p 5173:80 devops-platform-frontend
 ```
 
 ## Project Structure

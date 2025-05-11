@@ -1,4 +1,3 @@
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,7 +20,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: ${YOUR_REGISTRY}/devcompass-backend:latest
+        image: ${YOUR_REGISTRY}/devops-platform-backend:latest
         ports:
         - containerPort: 8080
         env:

@@ -1,4 +1,3 @@
-
 provider "aws" {
   region = var.aws_region
 }
@@ -6,7 +5,7 @@ provider "aws" {
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
   
-  name = "devcompass-vpc"
+  name = "devops-platform-vpc"
   cidr = "10.0.0.0/16"
   
   azs             = ["${var.aws_region}a", "${var.aws_region}b", "${var.aws_region}c"]
@@ -19,7 +18,7 @@ module "vpc" {
   tags = {
     Terraform   = "true"
     Environment = var.environment
-    Project     = "DevCompass"
+    Project     = "DevOps Platform"
   }
 }
 
@@ -55,7 +54,7 @@ resource "aws_security_group" "jenkins" {
     Name        = "jenkins-sg"
     Terraform   = "true"
     Environment = var.environment
-    Project     = "DevCompass"
+    Project     = "DevOps Platform"
   }
 }
 
@@ -116,7 +115,7 @@ resource "aws_instance" "jenkins" {
     Name        = "jenkins-server"
     Terraform   = "true"
     Environment = var.environment
-    Project     = "DevCompass"
+    Project     = "DevOps Platform"
   }
 }
 
@@ -160,7 +159,7 @@ resource "aws_security_group" "monitoring" {
     Name        = "monitoring-sg"
     Terraform   = "true"
     Environment = var.environment
-    Project     = "DevCompass"
+    Project     = "DevOps Platform"
   }
 }
 
@@ -309,7 +308,7 @@ resource "aws_instance" "monitoring" {
     Name        = "monitoring-server"
     Terraform   = "true"
     Environment = var.environment
-    Project     = "DevCompass"
+    Project     = "DevOps Platform"
   }
 }
 

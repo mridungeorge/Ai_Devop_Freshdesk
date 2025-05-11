@@ -1,4 +1,3 @@
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,7 +16,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ${YOUR_REGISTRY}/devcompass-frontend:latest
+        image: ${YOUR_REGISTRY}/devops-platform-frontend:latest
         ports:
         - containerPort: 80
         env:

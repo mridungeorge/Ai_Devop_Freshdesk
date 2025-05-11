@@ -1,7 +1,6 @@
+# DevOps Platform Backend
 
-# DevCompass Backend
-
-A complete Node.js/Express backend API for the DevCompass ticket tracking system.
+A complete Node.js/Express backend API for the DevOps Platform.
 
 ## Features
 

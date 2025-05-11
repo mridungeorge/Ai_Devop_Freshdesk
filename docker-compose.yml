@@ -1,67 +1,44 @@
-
 version: '3.8'
 
 services:
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.frontend
     ports:
       - "5173:80"
     environment:
-      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
-      - VITE_API_BASE_URL=http://backend:8080/api
-      - VITE_ENABLE_AI_FEATURES=${VITE_ENABLE_AI_FEATURES}
-      - VITE_APP_VERSION=${VITE_APP_VERSION}
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
+      VITE_API_BASE_URL: http://backend:8080/api
+      VITE_APP_VERSION: "1.0.0"
     depends_on:
       - backend
+      - postgres
+      - prometheus
     networks:
       - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.backend
     ports:
       - "8080:8080"
     environment:
-      - PORT=8080
-      - NODE_ENV=development
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=devuser
-      - POSTGRES_PASSWORD=devpassword
-      - POSTGRES_DB=ticketdb
-      - DATABASE_URL=postgresql://devuser:devpassword@postgres:5432/ticketdb
-      - JWT_SECRET=your-secret-key
-      - JWT_EXPIRES_IN=7d
+      PORT: 8080
+      NODE_ENV: development
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: ticketdb
+      DATABASE_URL: postgresql://devuser:devpassword@postgres:5432/ticketdb
+      JWT_SECRET: your-secret-key
+      JWT_EXPIRES_IN: 7d
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 15s
     networks:
       - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   postgres:
     image: postgres:15-alpine
@@ -71,27 +48,25 @@ services:
       POSTGRES_USER: devuser
       POSTGRES_PASSWORD: devpassword
       POSTGRES_DB: ticketdb
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U devuser -d ticketdb"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      start_period: 10s
+    restart: unless-stopped
+    command: ["postgres", "-c", "log_statement=all"]
 
   prometheus:
     image: prom/prometheus:latest
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -150,6 +125,16 @@ services:
       - app-network
     restart: unless-stopped
 
+  jenkins:
+    image: jenkins/jenkins:lts
+    ports:
+      - "8080:8080"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+    networks:
+      - app-network
+    restart: unless-stopped
+
 networks:
   app-network:
     driver: bridge
@@ -158,3 +143,4 @@ volumes:
   postgres-data:
   prometheus-data:
   grafana-data:
+  jenkins-data:

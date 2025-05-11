@@ -1,7 +1,6 @@
+# DevOps Platform Infrastructure
 
-# DevCompass Infrastructure
-
-This directory contains all the infrastructure code for the DevCompass application, including:
+This directory contains all the infrastructure code for the DevOps Platform, including:
 
 - Docker Compose configuration
 - Kubernetes manifests

@@ -5,13 +5,13 @@ FROM node:18-alpine as builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY backend/package*.json ./
 
 # Install all dependencies (including devDependencies)
 RUN npm install
 
 # Copy source code
-COPY . .
+COPY backend/ .
 
 # Build TypeScript code
 RUN npm run build
@@ -23,7 +23,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY backend/package*.json ./
 
 # Install only production dependencies
 RUN npm install --omit=dev
@@ -32,11 +32,11 @@ RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 
 # Expose the application port
-EXPOSE 8080
+EXPOSE 8081
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:8080/api/health || exit 1
+  CMD wget -qO- http://localhost:8081/api/health || exit 1
 
 # Start the application
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/server.js"] 

@@ -1,26 +1,28 @@
-
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload, Secret, SignOptions, VerifyOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import config from '../config';
 import { UserSession } from '../types';
 
 export const generateToken = (user: UserSession): string => {
+  const secret: Secret = config.jwt.secret;
+  const options: SignOptions = { expiresIn: config.jwt.expiresIn as any, algorithm: 'HS256' };
   return jwt.sign(
     {
       id: user.id,
       email: user.email,
       role: user.role
     },
-    config.jwt.secret,
-    {
-      expiresIn: config.jwt.expiresIn
-    }
+    secret,
+    options
   );
 };
 
 export const verifyToken = (token: string): UserSession => {
   try {
-    return jwt.verify(token, config.jwt.secret) as UserSession;
+    const secret: Secret = config.jwt.secret;
+    const options: VerifyOptions = { algorithms: ['HS256'] };
+    const decoded = jwt.verify(token, secret, options) as JwtPayload;
+    return decoded as UserSession;
   } catch (error) {
     throw new Error('Invalid token');
   }
@@ -28,12 +30,9 @@ export const verifyToken = (token: string): UserSession => {
 
 export const hashPassword = async (password: string): Promise<string> => {
   const salt = await bcrypt.genSalt(10);
-  return await bcrypt.hash(password, salt);
+  return bcrypt.hash(password, salt);
 };
 
-export const comparePasswords = async (
-  plainPassword: string,
-  hashedPassword: string
-): Promise<boolean> => {
-  return await bcrypt.compare(plainPassword, hashedPassword);
+export const comparePasswords = async (password: string, hash: string): Promise<boolean> => {
+  return bcrypt.compare(password, hash);
 };

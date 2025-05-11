@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CircleDot } from 'lucide-react';
@@ -30,7 +29,7 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md p-4">
         <div className="flex items-center justify-center mb-8">
           <CircleDot className="text-primary mr-2" size={32} />
-          <h1 className="text-3xl font-bold">DevCompass</h1>
+          <h1 className="text-3xl font-bold">DevOps Platform</h1>
         </div>
         
         <Card>
@@ -95,7 +94,7 @@ const Login: React.FC = () => {
         </Card>
         
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 DevCompass. All rights reserved.</p>
+          <p>&copy; 2025 DevOps Platform. All rights reserved.</p>
         </div>
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
     
@@ -19,9 +18,9 @@ pipeline {
         stage('Build Backend') {
             steps {
                 dir('backend') {
-                    sh 'docker build -t devcompass-backend:$BUILD_NUMBER .'
-                    sh 'docker tag devcompass-backend:$BUILD_NUMBER $ECR_REPOSITORY/devcompass-backend:$BUILD_NUMBER'
-                    sh 'docker tag devcompass-backend:$BUILD_NUMBER $ECR_REPOSITORY/devcompass-backend:latest'
+                    sh 'docker build -t devops-platform-backend:$BUILD_NUMBER .'
+                    sh 'docker tag devops-platform-backend:$BUILD_NUMBER $ECR_REPOSITORY/devops-platform-backend:$BUILD_NUMBER'
+                    sh 'docker tag devops-platform-backend:$BUILD_NUMBER $ECR_REPOSITORY/devops-platform-backend:latest'
                 }
             }
         }
@@ -29,9 +28,9 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 dir('frontend') {
-                    sh 'docker build -t devcompass-frontend:$BUILD_NUMBER .'
-                    sh 'docker tag devcompass-frontend:$BUILD_NUMBER $ECR_REPOSITORY/devcompass-frontend:$BUILD_NUMBER'
-                    sh 'docker tag devcompass-frontend:$BUILD_NUMBER $ECR_REPOSITORY/devcompass-frontend:latest'
+                    sh 'docker build -t devops-platform-frontend:$BUILD_NUMBER .'
+                    sh 'docker tag devops-platform-frontend:$BUILD_NUMBER $ECR_REPOSITORY/devops-platform-frontend:$BUILD_NUMBER'
+                    sh 'docker tag devops-platform-frontend:$BUILD_NUMBER $ECR_REPOSITORY/devops-platform-frontend:latest'
                 }
             }
         }
@@ -39,10 +38,10 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 sh '$(aws ecr get-login --no-include-email --region $AWS_REGION)'
-                sh 'docker push $ECR_REPOSITORY/devcompass-backend:$BUILD_NUMBER'
-                sh 'docker push $ECR_REPOSITORY/devcompass-backend:latest'
-                sh 'docker push $ECR_REPOSITORY/devcompass-frontend:$BUILD_NUMBER'
-                sh 'docker push $ECR_REPOSITORY/devcompass-frontend:latest'
+                sh 'docker push $ECR_REPOSITORY/devops-platform-backend:$BUILD_NUMBER'
+                sh 'docker push $ECR_REPOSITORY/devops-platform-backend:latest'
+                sh 'docker push $ECR_REPOSITORY/devops-platform-frontend:$BUILD_NUMBER'
+                sh 'docker push $ECR_REPOSITORY/devops-platform-frontend:latest'
             }
         }
         
@@ -51,8 +50,8 @@ pipeline {
                 sh 'export KUBECONFIG=$KUBECONFIG'
                 
                 // Update image tags in deployment files
-                sh "sed -i 's|\${YOUR_REGISTRY}/devcompass-backend:latest|$ECR_REPOSITORY/devcompass-backend:$BUILD_NUMBER|g' infra/kubernetes/backend-deployment.yml"
-                sh "sed -i 's|\${YOUR_REGISTRY}/devcompass-frontend:latest|$ECR_REPOSITORY/devcompass-frontend:$BUILD_NUMBER|g' infra/kubernetes/frontend-deployment.yml"
+                sh "sed -i 's|\${YOUR_REGISTRY}/devops-platform-backend:latest|$ECR_REPOSITORY/devops-platform-backend:$BUILD_NUMBER|g' infra/kubernetes/backend-deployment.yml"
+                sh "sed -i 's|\${YOUR_REGISTRY}/devops-platform-frontend:latest|$ECR_REPOSITORY/devops-platform-frontend:$BUILD_NUMBER|g' infra/kubernetes/frontend-deployment.yml"
                 
                 // Apply Kubernetes manifests
                 sh 'kubectl apply -f infra/kubernetes/services.yml'
@@ -69,10 +68,10 @@ pipeline {
     post {
         always {
             // Clean up local Docker images to save space
-            sh 'docker rmi devcompass-backend:$BUILD_NUMBER || true'
-            sh 'docker rmi devcompass-frontend:$BUILD_NUMBER || true'
-            sh 'docker rmi $ECR_REPOSITORY/devcompass-backend:$BUILD_NUMBER || true'
-            sh 'docker rmi $ECR_REPOSITORY/devcompass-frontend:$BUILD_NUMBER || true'
+            sh 'docker rmi devops-platform-backend:$BUILD_NUMBER || true'
+            sh 'docker rmi devops-platform-frontend:$BUILD_NUMBER || true'
+            sh 'docker rmi $ECR_REPOSITORY/devops-platform-backend:$BUILD_NUMBER || true'
+            sh 'docker rmi $ECR_REPOSITORY/devops-platform-frontend:$BUILD_NUMBER || true'
         }
         
         success {

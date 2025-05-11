@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
+*.env
+.env
+.env.*
+
+# Terraform state
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+
+# Docker volumes/data
+postgres-data/
+grafana-data/
+jenkins-data/
+prometheus-data/
